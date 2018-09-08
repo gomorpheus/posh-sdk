@@ -37,7 +37,7 @@ function Check-GVM-API-Version() {
     Write-Verbose 'Checking GVM-API version'
     try {
         $apiVersion = Get-GVM-API-Version
-        $gvmRemoteVersion = Invoke-API-Call "app/version"
+        $gvmRemoteVersion = Invoke-API-Call "broker/version"
 
         if ( $gvmRemoteVersion -gt $apiVersion) {
             if ( $Global:PGVM_AUTO_SELFUPDATE ) {
@@ -54,6 +54,7 @@ function Check-GVM-API-Version() {
 function Check-Posh-Gvm-Version() {
     Write-Verbose 'Checking posh-gvm version'
     if ( Is-New-Posh-GVM-Version-Available ) {
+        Write-Verbose "Inside if block"
         if ( $Global:PGVM_AUTO_SELFUPDATE ) {
             Invoke-Self-Update
         } else {
@@ -73,7 +74,10 @@ function Is-New-Posh-GVM-Version-Available() {
 
         Write-Verbose "posh-gvm version check $currentVersion > $localVersion = $($currentVersion -gt $localVersion)"
 
-        return ( $currentVersion -gt $localVersion )
+        $value = ($currentVersion -gt $localVersion)
+        Write-Verbose "Returning $value"
+        # return ( $currentVersion -gt $localVersion )
+        return $value
     } catch {
         return $false
     }
@@ -186,10 +190,10 @@ function Check-Candidate-Version-Available($Candidate, $Version) {
 
     if ( $UseDefault ) {
         Write-Verbose 'Try to get default version from remote'
-        return Invoke-API-Call "candidates/$Candidate/default"
+        return Invoke-API-Call "/candidates/default/$Candidate"
     }
 
-    $VersionAvailable = Invoke-API-Call "candidates/$Candidate/$Version"
+    $VersionAvailable = Invoke-API-Call "/candidates/validate/$Candidate/$Version/MINGW64"
 
     if ( $VersionAvailable -eq 'valid' ) {
         return $Version
@@ -296,6 +300,7 @@ function Check-Online-Mode() {
 }
 
 function Invoke-API-Call([string]$Path, [string]$FileTarget, [switch]$IgnoreFailure) {
+    Write-Verbose "Calling $Path"
     try {
         $target = "$Script:PGVM_SERVICE/$Path"
 
@@ -305,6 +310,7 @@ function Invoke-API-Call([string]$Path, [string]$FileTarget, [switch]$IgnoreFail
 
         return Invoke-RestMethod $target
     } catch {
+        #TODO Check whether we would be better off just throwing an error here.
         $Script:GVM_AVAILABLE = $false
         if ( ! ($IgnoreFailure) ) {
             Check-Online-Mode
@@ -348,8 +354,29 @@ function Init-Candidate-Cache() {
 function Update-Candidates-Cache() {
     Write-Verbose 'Update candidates-cache from GVM-API'
     Check-Online-Mode
-    Invoke-Api-Call 'app/version' $Script:GVM_API_VERSION_PATH
-    Invoke-API-Call 'candidates' $Script:PGVM_CANDIDATES_PATH
+    $version = Invoke-Api-Call 'broker/version'
+    Set-Content -Path $Script:GVM_API_VERSION_PATH -Value $version.appVersion
+    Invoke-API-Call 'candidates/all' $Script:PGVM_CANDIDATES_PATH
+}
+
+function Check-Candidate-Cache() {
+    $updateTime = ((Get-Item $Script:PGVM_CANDIDATES_PATH).LastAccessTime).AddDays(30);
+    if ((Test-Path $Script:PGVM_CANDIDATES_PATH) -and (Get-Content $Script:PGVM_CANDIDATES_PATH).Length -gt 0 -and (Get-Date) -gt $updateTime) {
+        Write-Output 'WARNING: Posh-gvm is out-of-date and requires an update. Please run:'
+        Write-Output ''
+        Write-Output '  $ gvm update'
+        Write-Output ''
+        return 0
+    } elseif ((Test-Path $Script:PGVM_CANDIDATES_PATH) -AND (Get-Content $Script:PGVM_CANDIDATES_PATH).Length -le 0) {
+        Write-Output "Warning: Cache is corrupt. Posh-GVM can not be used until updated."
+        Write-Output ''
+        Write-Output '  $ gvm update'
+        Write-Output ''
+        return 1
+    } else {
+        Write-Debug "Posh-GVM: No update needed. Using existing candidates cache: $Script:PGVM_CANDIDATES_PATH"
+        return 0
+    }
 }
 
 function Write-Offline-Version-List($Candidate) {
@@ -386,7 +413,7 @@ function Write-Version-List($Candidate) {
 
     $current = Get-Current-Candidate-Version $Candidate
     $versions = (Get-Installed-Candidate-Version-List $Candidate) -join ','
-    Invoke-API-Call "candidates/$Candidate/list?platform=posh&current=$current&installed=$versions" | Write-Output
+    Invoke-API-Call "candidates/$Candidate/MINGW64/versions/list?current=$current&installed=$versions" | Write-Output
 }
 
 function Install-Local-Version($Candidate, $Version, $LocalPath) {
@@ -414,39 +441,55 @@ function Install-Remote-Version($Candidate, $Version) {
     } else {
 		Check-Online-Mode
         Write-Output "`nDownloading: $Candidate $Version`n"
-        Download-File "$Script:PGVM_SERVICE/download/$Candidate/$Version`?platform=posh" $archive
+        Download-File "$Script:PGVM_SERVICE/broker/download/$Candidate/$Version/MINGW64" $archive
     }
 
     Write-Output "Installing: $Candidate $Version"
 
     # create temp dir if necessary
     if ( !(Test-Path $Script:PGVM_TEMP_PATH) ) {
+        Write-Verbose "Temp dir does not exist."
         New-Item -ItemType Directory $Script:PGVM_TEMP_PATH | Out-Null
     }
 
     # unzip downloaded archive
-    Unzip-Archive $archive $Script:PGVM_TEMP_PATH
+    Write-Verbose "Preparing to unzip archive."
+    $timestring = (Get-Date).ToFileTimeUtc()
+    $tmpdir = "$Script:PGVM_TEMP_PATH\$timestring"
+    Unzip-Archive $archive $tmpdir
 
 	# check if unzip successfully
-	if ( !(Test-Path "$Script:PGVM_TEMP_PATH\*-$Version") ) {
-		throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives'"
-	}
+	# if ( !(Test-Path "$Script:PGVM_TEMP_PATH\*-$Version") ) {
+    #     Write-Verbose "Could not detect archive."
+	# 	throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
+	# }
 
     # move to target location
     # Move was replaced by copy and remove because of random access denied errors
     # when Unzip was done by via -com shell.application
     # Move-Item "$Script:PGVM_TEMP_PATH\*-$Version" "$Global:PGVM_DIR\$Candidate\$Version"
-    Copy-Item "$Script:PGVM_TEMP_PATH\*-$Version" "$Global:PGVM_DIR\$Candidate\$Version" -Recurse
-    Remove-Item "$Script:PGVM_TEMP_PATH\*-$Version" -Recurse -Force
+    $directory = (Get-ChildItem $tmpdir).Name
+    Copy-Item "$tmpdir\$directory\" "$Global:PGVM_DIR\$Candidate\$Version" -Recurse
+    Remove-Item "$tmpdir" -Recurse -Force
     Write-Output "Done installing!"
 }
 
 function Unzip-Archive($Archive, $Target) {
-    if ( $Script:SEVENZ_On_PATH ) {
+    Write-Verbose "Unzipping archive $archive"
+    $shellVersion = [int]::Parse($PSVersionTable.PSVersion.Major)
+    if ( $shellVersion -gt 4 ) {
+        Expand-Archive -LiteralPath $Archive -DestinationPath $Target
+
+        if ($? -ne $true) {
+            Remove-Item $Target -Recurse -Force
+            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
+        }
+    } elseif ( $Script:SEVENZ_On_PATH ) {
         $zipProcess = Start-Process 7z.exe -ArgumentList "x -o`"$Target`" -y `"$Archive`"" -Wait -PassThru -NoNewWindow
 
         if ($zipProcess.ExitCode -ne 0) {
             Remove-Item $Target -Recurse -Force
+            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
         }
     } elseif ( $Script:UNZIP_ON_PATH ) {
         unzip.exe -oq $Archive -d $Target
@@ -454,6 +497,7 @@ function Unzip-Archive($Archive, $Target) {
         # use the windows shell as general fallback (no working on Windows Server Core because there is no shell)
         $shell = New-Object -com shell.application
         $shell.namespace($Target).copyhere($shell.namespace($Archive).items(), 0x10)
+        # TODO: Handle failed unzip.
     }
 }
 
@@ -464,6 +508,8 @@ function Download-File($Url, $TargetFile) {
     Write-Verbose "Try to download $Url with HttpWebRequest"
 	$uri = New-Object "System.Uri" $Url
     $request = [System.Net.HttpWebRequest]::Create($uri)
+    [System.Net.ServicePointManager]::Expect100Continue = $true;
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
     $request.set_Timeout(15000)
     $response = $request.GetResponse()
 	$totalLength = [System.Math]::Floor($response.get_ContentLength()/1024)

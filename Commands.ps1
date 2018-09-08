@@ -32,19 +32,19 @@
 
     try {
         switch -regex ($Command) {
-            '^i(nstall)?$'    { Install-Candidate-Version $Candidate $Version $InstallPath }
-            '^(uninstall|rm)$'{ Uninstall-Candidate-Version $Candidate $Version }
-            '^(ls|list)$'     { List-Candidate-Versions $Candidate }
-            '^u(se)?$'        { Use-Candidate-Version $Candidate $Version }
-            '^d(efault)?$'    { Set-Default-Version $Candidate $Version }
-            '^c(urrent)?$'    { Show-Current-Version $Candidate }
-            '^v(ersion)?$'    { Show-Posh-Gvm-Version }
-            '^b(roadcast)?$'  { Show-Broadcast-Message }
-            '^h(elp)?$'       { Show-Help }
-            '^offline$'       { Set-Offline-Mode $Candidate }
-            '^selfupdate$'    { Invoke-Self-Update($Force) }
-            '^flush$'         { Flush-Cache $Candidate }
-            default           { Write-Warning "Invalid command: $Command. Check gvm help!" }
+            '^i(nstall)?$'     { Install-Candidate-Version $Candidate $Version $InstallPath }
+            '^(uninstall|rm)$' { Uninstall-Candidate-Version $Candidate $Version }
+            '^(ls|list)$'      { List-Candidate-Versions $Candidate }
+            '^u(se)?$'         { Use-Candidate-Version $Candidate $Version }
+            '^d(efault)?$'     { Set-Default-Version $Candidate $Version }
+            '^c(urrent)?$'     { Show-Current-Version $Candidate }
+            '^v(ersion)?$'     { Show-Posh-Gvm-Version }
+            '^b(roadcast)?$'   { Show-Broadcast-Message }
+            '^h(elp)?$'        { Show-Help }
+            '^offline$'        { Set-Offline-Mode $Candidate }
+            '^selfupdate$'     { Invoke-Self-Update($Force) }
+            '^flush$'          { Flush-Cache $Candidate }
+            default            { Write-Warning "Invalid command: $Command. Check gvm help!" }
         }
     } catch {
         if ( $_.CategoryInfo.Category -eq 'OperationStopped') {

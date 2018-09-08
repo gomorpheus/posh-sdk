@@ -29,14 +29,14 @@ function Mock-No-Current-Grails {
 }
 
 function Mock-Api-Call-Default-Grails-2.2 {
-    Mock Invoke-API-Call { return 2.2 } -parameterFilter { $Path -eq 'candidates/grails/default' }
+    Mock Invoke-API-Call { return 2.2 } -parameterFilter { $Path -eq '/candidates/default/grails' }
 }
 
 function Mock-Api-Call-Grails-1.1.1-Available($Available) {
     if ( $Available ) {
-        Mock Invoke-API-Call { return $true } -parameterFilter { $Path -eq 'candidates/grails/1.1.1' }
+        Mock Invoke-API-Call { return $true } -parameterFilter { $Path -eq '/candidates/validate/grails/1.1.1/MINGW64' }
     } else {
-        Mock Invoke-API-Call { return $false } -parameterFilter { $Path -eq 'candidates/grails/1.1.1' }
+        Mock Invoke-API-Call { return $false } -parameterFilter { $Path -eq '/candidates/validate/grails/1.1.1/MINGW64' }
     }
 }
 

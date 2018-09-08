@@ -47,7 +47,7 @@ Describe 'Check-GVM-API-Version' {
         $Script:GVM_API_NEW_VERSION = $false
 
         Mock Get-GVM-API-Version { '1.2.2' }
-        Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'app/Version' }
+        Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'broker/version' }
 
         Check-GVM-API-Version
 
@@ -68,7 +68,7 @@ Describe 'Check-GVM-API-Version' {
         $Script:GVM_API_NEW_VERSION = $false
 
         Mock Get-GVM-API-Version { '1.2.2' }
-        Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'app/Version' }
+        Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'broker/version' }
         Mock Invoke-Self-Update -verifiable
 
         Check-GVM-API-Version
@@ -978,8 +978,8 @@ Describe 'Update-Candidate-Cache' {
         $Script:PGVM_CANDIDATES_PATH = "$Global:PGVM_DIR\candidates.txt"
 
         Mock Check-Online-Mode -verifiable
-        Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'app/version' -and $FileTarget -eq "$Global:PGVM_DIR\version.txt" }
-        Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'candidates' -and $FileTarget -eq "$Global:PGVM_DIR\candidates.txt" }
+        # Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'app/version' -and $FileTarget -eq "$Global:PGVM_DIR\version.txt" }
+        Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'candidates/all' -and $FileTarget -eq "$Global:PGVM_DIR\candidates.txt" }
 
         Update-Candidates-Cache
 
@@ -1022,7 +1022,7 @@ Describe 'Write-Version-List' {
         Mock Write-Output
         Mock Get-Current-Candidate-Version { '1.1.1' } -parameterFilter { $Candidate -eq 'grails' }
         Mock Get-Installed-Candidate-Version-List { return '1.1.1','2.2.2','2.3.0' } -parameterFilter { $Candidate -eq 'grails' }
-        Mock Invoke-API-Call { 'bla' } -parameterFilter { $Path -eq 'candidates/grails/list?platform=posh&current=1.1.1&installed=1.1.1,2.2.2,2.3.0' }
+        Mock Invoke-API-Call { 'bla' } -parameterFilter { $Path -eq 'candidates/grails/MINGW64/versions/list?current=1.1.1&installed=1.1.1,2.2.2,2.3.0' }
 
         Write-Version-List grails
 
@@ -1065,7 +1065,7 @@ Describe 'Install-Remote-Version' {
         $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\temp"
         $testFilePath = "$PSScriptRoot\test\grails-1.3.9.zip"
 
-        Mock Download-File -verifiable { Copy-Item $testFilePath "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" } -parameterFilter { $Url -eq 'foobar/download/grails/1.3.9?platform=posh' -and $TargetFile -eq "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" }
+        Mock Download-File -verifiable { Copy-Item $testFilePath "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" } -parameterFilter { $Url -eq 'foobar/broker/download/grails/1.3.9/MINGW64' -and $TargetFile -eq "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" }
 
         Install-Remote-Version grails 1.3.9
 
@@ -1111,12 +1111,12 @@ Describe 'Install-Remote-Version' {
         Mock Download-File
 
         $Script:PGVM_ARCHIVES_PATH = "$Global:PGVM_DIR\archives"
-        $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\temp"
+        $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\tmp"
         New-Item -ItemType Directory $Script:PGVM_ARCHIVES_PATH | Out-Null
         Copy-Item "$PSScriptRoot\test\grails-2.2.2.zip" "$Script:PGVM_ARCHIVES_PATH\grails-2.2.2.zip"
 
         It 'fails because of no unziped files' {
-            {  Install-Remote-Version grails 2.2.2 } | Should Throw
+            Install-Remote-Version grails 2.2.2  | Should Throw
         }
 
         It 'does not download the archive again' {

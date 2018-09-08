@@ -19,7 +19,7 @@ if ( !(Test-Path Variable:Global:PGVM_AUTO_SELFUPDATE) ) {
 }
 
 $Script:PGVM_INIT = $false
-$Script:PGVM_SERVICE = 'https://api.sdkman.io'
+$Script:PGVM_SERVICE = 'https://api.sdkman.io/2'
 $Script:PGVM_BROADCAST_SERVICE = 'https://api.sdkman.io/2'
 $Script:GVM_BASE_VERSION = '1.3.13'
 
