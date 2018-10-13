@@ -54,7 +54,6 @@ function Check-GVM-API-Version() {
 function Check-Posh-Gvm-Version() {
     Write-Verbose 'Checking posh-gvm version'
     if ( Is-New-Posh-GVM-Version-Available ) {
-        Write-Verbose "Inside if block"
         if ( $Global:PGVM_AUTO_SELFUPDATE ) {
             Invoke-Self-Update
         } else {
@@ -74,10 +73,7 @@ function Is-New-Posh-GVM-Version-Available() {
 
         Write-Verbose "posh-gvm version check $currentVersion > $localVersion = $($currentVersion -gt $localVersion)"
 
-        $value = ($currentVersion -gt $localVersion)
-        Write-Verbose "Returning $value"
-        # return ( $currentVersion -gt $localVersion )
-        return $value
+        return ( $currentVersion -gt $localVersion )
     } catch {
         return $false
     }
