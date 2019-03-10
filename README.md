@@ -1,6 +1,6 @@
 
 # posh-sdk - the POwerSHell Groovy enVironment Manager
-Posh-SDK is a clone of the [SDKMAN CLI](https://github.com/sdktool/sdk). In most aspects its an 1:1 copy of the BASH based version.
+Posh-SDK is a clone of the [SDKMAN CLI](https://sdkman.io). In most aspects its an 1:1 copy of the BASH based version.
 
 
 This project is a fork from the original posh-sdk project created and maintained by flofreud. It has been forked to try and attempt to take over some maintenance of the project and bring it up to date as the old project has stopped functioning.
@@ -24,13 +24,13 @@ You have multiple choices for installation of posh-sdk:
 Requirements:
 - Powershell 3.0+ (included in Windows 8+/Windows Server 2012+, for Windows 7 install Windows Management Framework 3.0)
 
-### With PsGet
-1. Execute `Install-Module posh-sdk`
+### Via short script
+1. Execute `(new-object Net.WebClient).DownloadString('https://raw.githubusercontent.com/gomorpheus/posh-sdk/master/GetPoshSdkMan.ps1') | iex`
 2. Execute `Import-Module posh-sdk`(best add it to your profile.ps1)
 3. Execute `sdk help` to get started!
 
-### Via short script
-1. Execute `(new-object Net.WebClient).DownloadString('https://raw.githubusercontent.com/gomorpheus/posh-sdk/master/GetPoshSdkMan.ps1') | iex`
+### With PsGet
+1. Execute `Install-Module posh-sdk`
 2. Execute `Import-Module posh-sdk`(best add it to your profile.ps1)
 3. Execute `sdk help` to get started!
 
@@ -59,25 +59,25 @@ Go to the checkout location and pull the repository.
 
 ## Usage
 
-For a general overview of the feature please the [GVM Project Page](http://sdktool.net) because posh-sdk is designed to work like the original BASH client. 
+For a general overview of the feature please the [SDKMan Project Page](http://sdkman.io) because posh-sdk is designed to work like the original BASH client. 
 
 Add `Import-Module posh-sdk` to your powershell profile to be able to use it after each start of Powershell. If you do not know where your profile is located, execute `$Global:profile`.
 
 ### Configuration
 By default posh-sdk put all the data (inclusive the to be installed executables) into ~/.posh_sdk. You can change the location by setting:
 
-	$Global:PGVM_DIR = <path>
+	$Global:PSDK_DIR = <path>
 
 n your profile BEFORE the `Import-Module posh-sdk` line.
 
 Similar to the BASH client you can configure posh-sdk to automatically set new installed versions as default version. You do this by adding:
 
-	$Global:PGVM_AUTO_ANSWER = $true
+	$Global:PSDK_AUTO_ANSWER = $true
 
 in your profile.
 
 ## Use
-Replace `gvm` for `sdk` and you'll have access to all the commands that you see in in the (GVM Tool homepage, now called sdkman)[http://sdkman.io/usage.html]
+All the same commands that are usable in sdkman can be used in the posh-sdk version (SDKMan homepage)[http://sdkman.io/usage.html]
 
 
 ## Uninstall
