@@ -137,7 +137,7 @@ function Invoke-Self-Update($Force) {
 
 function Invoke-Posh-Sdk-Update {
     Write-Output 'Update posh-sdk...'
-    . "$psScriptRoot\GetPoshSdk.ps1"
+    . "$psScriptRoot\GetPoshSdkMan.ps1"
 }
 
 function Check-Candidate-Present($Candidate) {
