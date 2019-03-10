@@ -1,13 +1,15 @@
-Considering that I'm not delivering software anymore on a maschine running Windows since early 2016 I'm not using posh-gvm anymore. It seems like it's mostly still working but clearly an active maintainer would be helpful. It's so old that the orginial projects was renamed and did grow quiet a bit over the functionality provided for Powershell. If anyone wants to pick up...
 
 # posh-gvm - the POwerSHell Groovy enVironment Manager
 Posh-GVM is a clone of the [GVM CLI](https://github.com/gvmtool/gvm). In most aspects its an 1:1 copy of the BASH based version.
 
-For further information about the features of GVM please the documentation on the [GVM Project Page](http://gvmtool.net).
+
+This project is a fork from the original posh-gvm project created and maintained by flofreud. It has been forked to try and attempt to take over some maintenance of the project and bring it up to date as the old project has stopped functioning.
+
+For further information about the features of GVM please the documentation on the [GVM Project Page](http://sdkman.io).
 
 Posh-GVM consumes the REST-API of the offical GVM CLI and may therefore break if the API will be changed in future.
 
-Please report any bugs and feature request on the [GitHub Issue Tracker](https://github.com/flofreud/posh-gvm/issues).
+Please report any bugs and feature request on the [GitHub Issue Tracker](https://github.com/gomorpheus/posh-gvm/issues).
 
 ## ATTENTION - Always offline and selfupdate Issue
 Recently the used url for the API endpoint got drop so that the posh-gvm thinks there is always a connection issue. The newest available version uses the new API endpoint but due to the expected connection issue the update has to be done manually.
@@ -107,3 +109,5 @@ All posh-gvm test are written for Pester. Please see its documentation: https://
 To run the tests in Powershell, load the Pester module and run in posh-gvm dir:
 
 	$ Invoke-Pester
+
+
