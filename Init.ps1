@@ -1,28 +1,28 @@
 #region Initialization
-function Init-Posh-Gvm() {
-    Write-Verbose 'Init posh-gvm'
+function Init-Posh-Sdk() {
+    Write-Verbose 'Init posh-sdk'
 
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
 
     Check-JAVA-HOME
 
-    # Check if $Global:PGVM_DIR is available, if not create it
-    if ( !( Test-Path "$Global:PGVM_DIR\.meta" ) ) {
-        New-Item -ItemType Directory "$Global:PGVM_DIR\.meta" | Out-Null
+    # Check if $Global:PSDK_DIR is available, if not create it
+    if ( !( Test-Path "$Global:PSDK_DIR\.meta" ) ) {
+        New-Item -ItemType Directory "$Global:PSDK_DIR\.meta" | Out-Null
     }
 
     # Load candidates cache
-    if ( ! (Test-Path $Script:PGVM_CANDIDATES_PATH) ) {
+    if ( ! (Test-Path $Script:PSDK_CANDIDATES_PATH) ) {
         Update-Candidates-Cache
     }
 
     Init-Candidate-Cache
 
     #Setup default paths
-    Foreach ( $candidate in $Script:GVM_CANDIDATES ) {
-		if ( !( Test-Path "$Global:PGVM_DIR\$candidate" ) ) {
-			New-Item -ItemType Directory "$Global:PGVM_DIR\$candidate" | Out-Null
+    Foreach ( $candidate in $Script:SDK_CANDIDATES ) {
+		if ( !( Test-Path "$Global:PSDK_DIR\$candidate" ) ) {
+			New-Item -ItemType Directory "$Global:PSDK_DIR\$candidate" | Out-Null
 		}
 
         Set-Env-Candidate-Version $candidate 'current'

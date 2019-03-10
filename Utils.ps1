@@ -20,58 +20,58 @@ ONLINE MODE RE-ENABLED! All functionality now restored.
 }
 
 function Write-New-Version-Broadcast() {
-    if ( $Script:GVM_API_NEW_VERSION -or $Script:PGVM_NEW_VERSION ) {
+    if ( $Script:SDK_API_NEW_VERSION -or $Script:PSDK_NEW_VERSION ) {
 Write-Output @"
 ==== UPDATE AVAILABLE ==========================================================
 
 A new version is available. Please consider to execute:
 
-    gvm selfupdate
+    sdk selfupdate
 
 ================================================================================
 "@
     }
 }
 
-function Check-GVM-API-Version() {
-    Write-Verbose 'Checking GVM-API version'
+function Check-SDK-API-Version() {
+    Write-Verbose 'Checking SDK-API version'
     try {
-        $apiVersion = Get-GVM-API-Version
-        $gvmRemoteVersion = Invoke-API-Call "broker/version"
+        $apiVersion = Get-SDK-API-Version
+        $sdkRemoteVersion = Invoke-API-Call "broker/version"
 
-        if ( $gvmRemoteVersion -gt $apiVersion) {
-            if ( $Global:PGVM_AUTO_SELFUPDATE ) {
+        if ( $sdkRemoteVersion -gt $apiVersion) {
+            if ( $Global:PSDK_AUTO_SELFUPDATE ) {
                 Invoke-Self-Update
             } else {
-                $Script:GVM_API_NEW_VERSION = $true
+                $Script:SDK_API_NEW_VERSION = $true
             }
         }
     } catch {
-        $Script:GVM_AVAILABLE = $false
+        $Script:SDK_AVAILABLE = $false
     }
 }
 
-function Check-Posh-Gvm-Version() {
-    Write-Verbose 'Checking posh-gvm version'
-    if ( Is-New-Posh-GVM-Version-Available ) {
-        if ( $Global:PGVM_AUTO_SELFUPDATE ) {
+function Check-Posh-Sdk-Version() {
+    Write-Verbose 'Checking posh-sdk version'
+    if ( Is-New-Posh-SDK-Version-Available ) {
+        if ( $Global:PSDK_AUTO_SELFUPDATE ) {
             Invoke-Self-Update
         } else {
-            $Script:PGVM_NEW_VERSION = $true
+            $Script:PSDK_NEW_VERSION = $true
         }
     }
 }
 
-function Get-Posh-Gvm-Version() {
-    return Get-Content $Script:PGVM_VERSION_PATH
+function Get-Posh-Sdk-Version() {
+    return Get-Content $Script:PSDK_VERSION_PATH
 }
 
-function Is-New-Posh-GVM-Version-Available() {
+function Is-New-Posh-SDK-Version-Available() {
     try {
-        $localVersion = (Get-Posh-Gvm-Version).Trim()
-        $currentVersion = (Invoke-RestMethod $Script:PGVM_VERSION_SERVICE).Trim()
+        $localVersion = (Get-Posh-Sdk-Version).Trim()
+        $currentVersion = (Invoke-RestMethod $Script:PSDK_VERSION_SERVICE).Trim()
 
-        Write-Verbose "posh-gvm version check $currentVersion > $localVersion = $($currentVersion -gt $localVersion)"
+        Write-Verbose "posh-sdk version check $currentVersion > $localVersion = $($currentVersion -gt $localVersion)"
 
         return ( $currentVersion -gt $localVersion )
     } catch {
@@ -79,29 +79,29 @@ function Is-New-Posh-GVM-Version-Available() {
     }
 }
 
-function Get-GVM-API-Version() {
-	if ( !(Test-Path $Script:GVM_API_VERSION_PATH) ) {
+function Get-SDK-API-Version() {
+	if ( !(Test-Path $Script:SDK_API_VERSION_PATH) ) {
 		return $null
 	}
-    return Get-Content $Script:GVM_API_VERSION_PATH
+    return Get-Content $Script:SDK_API_VERSION_PATH
 }
 
 function Check-Available-Broadcast($Command) {
-    $version = Get-GVM-API-Version
+    $version = Get-SDK-API-Version
     if ( !( $version ) ) {
         return
     }
 
     $liveBroadcast = Invoke-Broadcast-API-Call
 
-	Write-Verbose "Online-Mode: $Script:GVM_AVAILABLE"
+	Write-Verbose "Online-Mode: $Script:SDK_AVAILABLE"
 
-	if ( $Script:GVM_ONLINE -and !($Script:GVM_AVAILABLE) ) {
+	if ( $Script:SDK_ONLINE -and !($Script:SDK_AVAILABLE) ) {
 		Write-Offline-Broadcast
-	} elseif ( !($Script:GVM_ONLINE) -and $Script:GVM_AVAILABLE ) {
+	} elseif ( !($Script:SDK_ONLINE) -and $Script:SDK_AVAILABLE ) {
 		Write-Online-Broadcast
 	}
-	$Script:GVM_ONLINE = $Script:GVM_AVAILABLE
+	$Script:SDK_ONLINE = $Script:SDK_AVAILABLE
 
 	if ( $liveBroadcast ) {
 		Handle-Broadcast $Command $liveBroadcast
@@ -110,12 +110,12 @@ function Check-Available-Broadcast($Command) {
 
 function Invoke-Broadcast-API-Call {
     try {
-        $target = "$Script:PGVM_BROADCAST_SERVICE/broadcast/latest"
+        $target = "$Script:PSDK_BROADCAST_SERVICE/broadcast/latest"
         Write-Verbose "Broadcast API call to: $target"
         return Invoke-RestMethod $target
     } catch {
         Write-Verbose "Could not reached broadcast API"
-        $Script:GVM_AVAILABLE = $false
+        $Script:SDK_AVAILABLE = $false
         return $null
     }
 }
@@ -124,20 +124,20 @@ function Invoke-Self-Update($Force) {
     Write-Verbose 'Perform Invoke-Self-Update'
     Write-Output 'Update list of available candidates...'
     Update-Candidates-Cache
-    $Script:GVM_API_NEW_VERSION = $false
+    $Script:SDK_API_NEW_VERSION = $false
     if ( $Force ) {
-        Invoke-Posh-Gvm-Update
+        Invoke-Posh-Sdk-Update
     } else {
-        if ( Is-New-Posh-GVM-Version-Available ) {
-            Invoke-Posh-Gvm-Update
+        if ( Is-New-Posh-SDK-Version-Available ) {
+            Invoke-Posh-Sdk-Update
         }
     }
-    $Script:PGVM_NEW_VERSION = $false
+    $Script:PSDK_NEW_VERSION = $false
 }
 
-function Invoke-Posh-Gvm-Update {
-    Write-Output 'Update posh-gvm...'
-    . "$psScriptRoot\GetPoshGvm.ps1"
+function Invoke-Posh-Sdk-Update {
+    Write-Output 'Update posh-sdk...'
+    . "$psScriptRoot\GetPoshSdk.ps1"
 }
 
 function Check-Candidate-Present($Candidate) {
@@ -145,7 +145,7 @@ function Check-Candidate-Present($Candidate) {
         throw 'No candidate provided.'
     }
 
-    if ( !($Script:GVM_CANDIDATES -contains $Candidate) ) {
+    if ( !($Script:SDK_CANDIDATES -contains $Candidate) ) {
         throw "Stop! $Candidate is no valid candidate!"
     }
 }
@@ -199,7 +199,7 @@ function Check-Candidate-Version-Available($Candidate, $Version) {
 }
 
 function Get-Current-Candidate-Version($Candidate) {
-    $currentLink = "$Global:PGVM_DIR\$Candidate\current"
+    $currentLink = "$Global:PSDK_DIR\$Candidate\current"
 
     $targetItem = Get-Junction-Target $currentLink
 
@@ -248,19 +248,19 @@ function Check-Candidate-Version-Locally-Available($Candidate, $Version) {
 
 function Is-Candidate-Version-Locally-Available($Candidate, $Version) {
     if ( $Version ) {
-        return Test-Path "$Global:PGVM_DIR\$Candidate\$Version"
+        return Test-Path "$Global:PSDK_DIR\$Candidate\$Version"
     } else {
         return $false
     }
 }
 
 function Get-Installed-Candidate-Version-List($Candidate) {
-    return Get-ChildItem "$Global:PGVM_DIR\$Candidate" | ?{ $_.PSIsContainer -and $_.Name -ne 'current' } | Foreach { $_.Name }
+    return Get-ChildItem "$Global:PSDK_DIR\$Candidate" | ?{ $_.PSIsContainer -and $_.Name -ne 'current' } | Foreach { $_.Name }
 }
 
 function Set-Env-Candidate-Version($Candidate, $Version) {
     $candidateEnv = ([string]$candidate).ToUpper() + "_HOME"
-    $candidateDir = "$Global:PGVM_DIR\$candidate"
+    $candidateDir = "$Global:PSDK_DIR\$candidate"
     $candidateHome = "$candidateDir\$Version"
     $candidateBin = "$candidateHome\bin"
 
@@ -272,8 +272,8 @@ function Set-Env-Candidate-Version($Candidate, $Version) {
 }
 
 function Set-Linked-Candidate-Version($Candidate, $Version) {
-    $Link = "$Global:PGVM_DIR\$Candidate\current"
-    $Target = "$Global:PGVM_DIR\$Candidate\$Version"
+    $Link = "$Global:PSDK_DIR\$Candidate\current"
+    $Target = "$Global:PSDK_DIR\$Candidate\$Version"
     Set-Junction-Via-Mklink $Link $Target
 }
 
@@ -286,7 +286,7 @@ function Set-Junction-Via-Mklink($Link, $Target) {
 }
 
 function Get-Online-Mode() {
-    return $Script:GVM_AVAILABLE -and ! ($Script:GVM_FORCE_OFFLINE)
+    return $Script:SDK_AVAILABLE -and ! ($Script:SDK_FORCE_OFFLINE)
 }
 
 function Check-Online-Mode() {
@@ -298,7 +298,7 @@ function Check-Online-Mode() {
 function Invoke-API-Call([string]$Path, [string]$FileTarget, [switch]$IgnoreFailure) {
     Write-Verbose "Calling $Path"
     try {
-        $target = "$Script:PGVM_SERVICE/$Path"
+        $target = "$Script:PSDK_SERVICE/$Path"
 
         if ( $FileTarget ) {
             return Invoke-RestMethod $target -OutFile $FileTarget
@@ -307,7 +307,7 @@ function Invoke-API-Call([string]$Path, [string]$FileTarget, [switch]$IgnoreFail
         return Invoke-RestMethod $target
     } catch {
         #TODO Check whether we would be better off just throwing an error here.
-        $Script:GVM_AVAILABLE = $false
+        $Script:SDK_AVAILABLE = $false
         if ( ! ($IgnoreFailure) ) {
             Check-Online-Mode
         } else {
@@ -326,51 +326,51 @@ function Cleanup-Directory($Path) {
 
 function Handle-Broadcast($Command, $Broadcast) {
     $oldBroadcast = $null
-    if (Test-Path $Script:PGVM_BROADCAST_PATH) {
-        $oldBroadcast = (Get-Content $Script:PGVM_BROADCAST_PATH) -join "`n"
+    if (Test-Path $Script:PSDK_BROADCAST_PATH) {
+        $oldBroadcast = (Get-Content $Script:PSDK_BROADCAST_PATH) -join "`n"
         Write-Verbose 'Old broadcast message loaded'
     }
 
     if ($oldBroadcast -ne $Broadcast -and !($Command -match 'b(roadcast)?') -and $Command -ne 'selfupdate' -and $Command -ne 'flush' ) {
         Write-Verbose 'Showing the new broadcast message'
-        Set-Content $Script:PGVM_BROADCAST_PATH $Broadcast
+        Set-Content $Script:PSDK_BROADCAST_PATH $Broadcast
         Write-Output $Broadcast
     }
 }
 
 function Init-Candidate-Cache() {
-    if ( !(Test-Path $Script:PGVM_CANDIDATES_PATH) ) {
+    if ( !(Test-Path $Script:PSDK_CANDIDATES_PATH) ) {
         throw 'Can not retrieve list of candidates'
     }
 
-    $Script:GVM_CANDIDATES = (Get-Content $Script:PGVM_CANDIDATES_PATH).Split(',')
-    Write-Verbose "Available candidates: $Script:GVM_CANDIDATES"
+    $Script:SDK_CANDIDATES = (Get-Content $Script:PSDK_CANDIDATES_PATH).Split(',')
+    Write-Verbose "Available candidates: $Script:SDK_CANDIDATES"
 }
 
 function Update-Candidates-Cache() {
-    Write-Verbose 'Update candidates-cache from GVM-API'
+    Write-Verbose 'Update candidates-cache from SDK-API'
     Check-Online-Mode
     $version = Invoke-Api-Call 'broker/version'
-    Set-Content -Path $Script:GVM_API_VERSION_PATH -Value $version.appVersion
-    Invoke-API-Call 'candidates/all' $Script:PGVM_CANDIDATES_PATH
+    Set-Content -Path $Script:SDK_API_VERSION_PATH -Value $version.appVersion
+    Invoke-API-Call 'candidates/all' $Script:PSDK_CANDIDATES_PATH
 }
 
 function Check-Candidate-Cache() {
-    $updateTime = ((Get-Item $Script:PGVM_CANDIDATES_PATH).LastAccessTime).AddDays(30);
-    if ((Test-Path $Script:PGVM_CANDIDATES_PATH) -and (Get-Content $Script:PGVM_CANDIDATES_PATH).Length -gt 0 -and (Get-Date) -gt $updateTime) {
-        Write-Output 'WARNING: Posh-gvm is out-of-date and requires an update. Please run:'
+    $updateTime = ((Get-Item $Script:PSDK_CANDIDATES_PATH).LastAccessTime).AddDays(30);
+    if ((Test-Path $Script:PSDK_CANDIDATES_PATH) -and (Get-Content $Script:PSDK_CANDIDATES_PATH).Length -gt 0 -and (Get-Date) -gt $updateTime) {
+        Write-Output 'WARNING: Posh-sdk is out-of-date and requires an update. Please run:'
         Write-Output ''
-        Write-Output '  $ gvm update'
+        Write-Output '  $ sdk update'
         Write-Output ''
         return 0
-    } elseif ((Test-Path $Script:PGVM_CANDIDATES_PATH) -AND (Get-Content $Script:PGVM_CANDIDATES_PATH).Length -le 0) {
-        Write-Output "Warning: Cache is corrupt. Posh-GVM can not be used until updated."
+    } elseif ((Test-Path $Script:PSDK_CANDIDATES_PATH) -AND (Get-Content $Script:PSDK_CANDIDATES_PATH).Length -le 0) {
+        Write-Output "Warning: Cache is corrupt. Posh-SDK can not be used until updated."
         Write-Output ''
-        Write-Output '  $ gvm update'
+        Write-Output '  $ sdk update'
         Write-Output ''
         return 1
     } else {
-        Write-Debug "Posh-GVM: No update needed. Using existing candidates cache: $Script:PGVM_CANDIDATES_PATH"
+        Write-Debug "Posh-SDK: No update needed. Using existing candidates cache: $Script:PSDK_CANDIDATES_PATH"
         return 0
     }
 }
@@ -420,52 +420,52 @@ function Install-Local-Version($Candidate, $Version, $LocalPath) {
     }
 
     Write-Output "Linking $Candidate $Version to $LocalPath"
-    $link = "$Global:PGVM_DIR\$Candidate\$Version"
+    $link = "$Global:PSDK_DIR\$Candidate\$Version"
     Set-Junction-Via-Mklink $link $LocalPath
     Write-Output "Done installing!"
 }
 
 function Install-Remote-Version($Candidate, $Version) {
 
-    if ( !(Test-Path $Script:PGVM_ARCHIVES_PATH) ) {
-        New-Item -ItemType Directory $Script:PGVM_ARCHIVES_PATH | Out-Null
+    if ( !(Test-Path $Script:PSDK_ARCHIVES_PATH) ) {
+        New-Item -ItemType Directory $Script:PSDK_ARCHIVES_PATH | Out-Null
     }
 
-    $archive = "$Script:PGVM_ARCHIVES_PATH\$Candidate-$Version.zip"
+    $archive = "$Script:PSDK_ARCHIVES_PATH\$Candidate-$Version.zip"
     if ( Test-Path $archive ) {
         Write-Output "Found a previously downloaded $Candidate $Version archive. Not downloading it again..."
     } else {
 		Check-Online-Mode
         Write-Output "`nDownloading: $Candidate $Version`n"
-        Download-File "$Script:PGVM_SERVICE/broker/download/$Candidate/$Version/MINGW64" $archive
+        Download-File "$Script:PSDK_SERVICE/broker/download/$Candidate/$Version/MINGW64" $archive
     }
 
     Write-Output "Installing: $Candidate $Version"
 
     # create temp dir if necessary
-    if ( !(Test-Path $Script:PGVM_TEMP_PATH) ) {
+    if ( !(Test-Path $Script:PSDK_TEMP_PATH) ) {
         Write-Verbose "Temp dir does not exist."
-        New-Item -ItemType Directory $Script:PGVM_TEMP_PATH | Out-Null
+        New-Item -ItemType Directory $Script:PSDK_TEMP_PATH | Out-Null
     }
 
     # unzip downloaded archive
     Write-Verbose "Preparing to unzip archive."
     $timestring = (Get-Date).ToFileTimeUtc()
-    $tmpdir = "$Script:PGVM_TEMP_PATH\$timestring"
+    $tmpdir = "$Script:PSDK_TEMP_PATH\$timestring"
     Unzip-Archive $archive $tmpdir
 
 	# check if unzip successfully
-	# if ( !(Test-Path "$Script:PGVM_TEMP_PATH\*-$Version") ) {
+	# if ( !(Test-Path "$Script:PSDK_TEMP_PATH\*-$Version") ) {
     #     Write-Verbose "Could not detect archive."
-	# 	throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
+	# 	throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PSDK_ARCHIVES_PATH (or delete all with 'sdk flush archives')"
 	# }
 
     # move to target location
     # Move was replaced by copy and remove because of random access denied errors
     # when Unzip was done by via -com shell.application
-    # Move-Item "$Script:PGVM_TEMP_PATH\*-$Version" "$Global:PGVM_DIR\$Candidate\$Version"
+    # Move-Item "$Script:PSDK_TEMP_PATH\*-$Version" "$Global:PSDK_DIR\$Candidate\$Version"
     $directory = (Get-ChildItem $tmpdir).Name
-    Copy-Item "$tmpdir\$directory\" "$Global:PGVM_DIR\$Candidate\$Version" -Recurse
+    Copy-Item "$tmpdir\$directory\" "$Global:PSDK_DIR\$Candidate\$Version" -Recurse
     Remove-Item "$tmpdir" -Recurse -Force
     Write-Output "Done installing!"
 }
@@ -478,14 +478,14 @@ function Unzip-Archive($Archive, $Target) {
 
         if ($? -ne $true) {
             Remove-Item $Target -Recurse -Force
-            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
+            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PSDK_ARCHIVES_PATH (or delete all with 'sdk flush archives')"
         }
     } elseif ( $Script:SEVENZ_On_PATH ) {
         $zipProcess = Start-Process 7z.exe -ArgumentList "x -o`"$Target`" -y `"$Archive`"" -Wait -PassThru -NoNewWindow
 
         if ($zipProcess.ExitCode -ne 0) {
             Remove-Item $Target -Recurse -Force
-            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PGVM_ARCHIVES_PATH (or delete all with 'gvm flush archives')"
+            throw "Could not unzip the archive of $Candidate $Version. Please delete archive from $Script:PSDK_ARCHIVES_PATH (or delete all with 'sdk flush archives')"
         }
     } elseif ( $Script:UNZIP_ON_PATH ) {
         unzip.exe -oq $Archive -d $Target

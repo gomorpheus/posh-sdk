@@ -1,164 +1,164 @@
 ﻿. .\Utils.ps1
 . .\TestUtils.ps1
 
-Describe 'Check-GVM-API-Version' {
+Describe 'Check-SDK-API-Version' {
     Context 'API offline' {
-        $Script:GVM_AVAILABLE = $true
-        $Script:GVM_API_NEW_VERSION = $false
-        Mock Get-GVM-API-Version
+        $Script:SDK_AVAILABLE = $true
+        $Script:SDK_API_NEW_VERSION = $false
+        Mock Get-SDK-API-Version
         Mock Invoke-API-Call { throw 'error' }  -parameterFilter { $Path -eq 'app/Version' }
 
-        Check-GVM-API-Version
+        Check-SDK-API-Version
 
         It 'the error handling set the app in offline mode' {
-            $Script:GVM_AVAILABLE | Should be $false
+            $Script:SDK_AVAILABLE | Should be $false
         }
 
         It 'does not informs about new version' {
-            $Script:GVM_API_NEW_VERSION | Should Be $false
+            $Script:SDK_API_NEW_VERSION | Should Be $false
         }
     }
 
     Context 'No new version' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $true
-        $Script:GVM_API_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $true
+        $Script:SDK_API_NEW_VERSION = $false
 
-        Mock Get-GVM-API-Version { 1.2.2 }
+        Mock Get-SDK-API-Version { 1.2.2 }
         Mock Invoke-API-Call { 1.2.2 } -parameterFilter { $Path -eq 'app/Version' }
         Mock Invoke-Self-Update
 
-        Check-GVM-API-Version
+        Check-SDK-API-Version
 
         It 'do nothing' {
             Assert-MockCalled Invoke-Self-Update 0
         }
 
         It 'does not informs about new version' {
-            $Script:GVM_API_NEW_VERSION | Should Be $false
+            $Script:SDK_API_NEW_VERSION | Should Be $false
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 
     Context 'New version and no auto selfupdate' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $false
-        $Script:GVM_API_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $false
+        $Script:SDK_API_NEW_VERSION = $false
 
-        Mock Get-GVM-API-Version { '1.2.2' }
+        Mock Get-SDK-API-Version { '1.2.2' }
         Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'broker/version' }
 
-        Check-GVM-API-Version
+        Check-SDK-API-Version
 
         It 'informs about new version' {
-            $Script:GVM_API_NEW_VERSION | Should Be $true
+            $Script:SDK_API_NEW_VERSION | Should Be $true
         }
 
         It 'write a warning about needed update' {
             Assert-VerifiableMocks
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 
     Context 'New version and auto selfupdate' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $true
-        $Script:GVM_API_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $true
+        $Script:SDK_API_NEW_VERSION = $false
 
-        Mock Get-GVM-API-Version { '1.2.2' }
+        Mock Get-SDK-API-Version { '1.2.2' }
         Mock Invoke-API-Call { '1.2.3' } -parameterFilter { $Path -eq 'broker/version' }
         Mock Invoke-Self-Update -verifiable
 
-        Check-GVM-API-Version
+        Check-SDK-API-Version
 
         It 'updates self' {
             Assert-VerifiableMocks
         }
 
         It 'does not informs about new version' {
-            $Script:GVM_API_NEW_VERSION | Should Be $false
+            $Script:SDK_API_NEW_VERSION | Should Be $false
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 }
 
-Describe 'Check-Posh-Gvm-Version' {
+Describe 'Check-Posh-Sdk-Version' {
     Context 'No new Version' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $false
-        $Script:PGVM_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $false
+        $Script:PSDK_NEW_VERSION = $false
 
-        Mock Is-New-Posh-GVM-Version-Available { $false }
+        Mock Is-New-Posh-SDK-Version-Available { $false }
         Mock Invoke-Self-Update
 
-        Check-Posh-Gvm-Version
+        Check-Posh-Sdk-Version
 
         It 'does not update itself' {
             Assert-MockCalled Invoke-Self-Update -Times 0
         }
 
         It 'does not informs about new version' {
-            $Script:PGVM_NEW_VERSION | Should Be $false
+            $Script:PSDK_NEW_VERSION | Should Be $false
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 
     Context 'New version and no auto selfupdate' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $false
-        $Script:PGVM_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $false
+        $Script:PSDK_NEW_VERSION = $false
 
-        Mock Is-New-Posh-GVM-Version-Available { $true }
+        Mock Is-New-Posh-SDK-Version-Available { $true }
         Mock Invoke-Self-Update
 
-        Check-Posh-Gvm-Version
+        Check-Posh-Sdk-Version
 
         It 'informs about new version' {
-            $Script:PGVM_NEW_VERSION | Should Be $true
+            $Script:PSDK_NEW_VERSION | Should Be $true
         }
 
         It 'does not update itself' {
             Assert-MockCalled Invoke-Self-Update -Times 0
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 
     Context 'New version and auto selfupdate' {
-        $backup_Global_PGVM_AUTO_SELFUPDTE = $Global:PGVM_AUTO_SELFUPDATE
-        $Global:PGVM_AUTO_SELFUPDATE = $true
-        $Script:PGVM_NEW_VERSION = $false
+        $backup_Global_PSDK_AUTO_SELFUPDTE = $Global:PSDK_AUTO_SELFUPDATE
+        $Global:PSDK_AUTO_SELFUPDATE = $true
+        $Script:PSDK_NEW_VERSION = $false
 
-        Mock Is-New-Posh-GVM-Version-Available { $true }
+        Mock Is-New-Posh-SDK-Version-Available { $true }
         Mock Invoke-Self-Update -verifiable
 
-        Check-Posh-Gvm-Version
+        Check-Posh-Sdk-Version
 
         It 'updates self' {
             Assert-VerifiableMocks
         }
 
         It 'does not informs about new version' {
-            $Script:PGVM_NEW_VERSION | Should Be $false
+            $Script:PSDK_NEW_VERSION | Should Be $false
         }
 
-        $Global:PGVM_AUTO_SELFUPDATE = $backup_Global_PGVM_AUTO_SELFUPDTE
+        $Global:PSDK_AUTO_SELFUPDATE = $backup_Global_PSDK_AUTO_SELFUPDTE
     }
 }
 
-Describe 'Is-New-Posh-GVM-Version-Available' {
+Describe 'Is-New-Posh-SDK-Version-Available' {
     Context 'New version available' {
-        $Script:PGVM_VERSION_SERVICE = 'blub'
-        $Script:PGVM_VERSION_PATH = 'TestDrive:VERSION.txt'
-        Set-Content $Script:PGVM_VERSION_PATH '1.1.1'
+        $Script:PSDK_VERSION_SERVICE = 'blub'
+        $Script:PSDK_VERSION_PATH = 'TestDrive:VERSION.txt'
+        Set-Content $Script:PSDK_VERSION_PATH '1.1.1'
 
         Mock Invoke-RestMethod { '1.2.1' } -parameterFilter { $Uri -eq 'blub' }
 
-        $result = Is-New-Posh-GVM-Version-Available
+        $result = Is-New-Posh-SDK-Version-Available
 
         It 'returns $true' {
             $result | Should Be $true
@@ -166,13 +166,13 @@ Describe 'Is-New-Posh-GVM-Version-Available' {
     }
 
     Context 'No new version available' {
-        $Script:PGVM_VERSION_SERVICE = 'blub'
-        $Script:PGVM_VERSION_PATH = 'TestDrive:VERSION.txt'
-        Set-Content $Script:PGVM_VERSION_PATH '1.1.1'
+        $Script:PSDK_VERSION_SERVICE = 'blub'
+        $Script:PSDK_VERSION_PATH = 'TestDrive:VERSION.txt'
+        Set-Content $Script:PSDK_VERSION_PATH '1.1.1'
 
         Mock Invoke-RestMethod { '1.1.1' } -parameterFilter { $Uri -eq 'blub' }
 
-        $result = Is-New-Posh-GVM-Version-Available
+        $result = Is-New-Posh-SDK-Version-Available
 
         It 'returns $false' {
             $result | Should Be $false
@@ -180,13 +180,13 @@ Describe 'Is-New-Posh-GVM-Version-Available' {
     }
 
     Context 'Version service error' {
-        $Script:PGVM_VERSION_SERVICE = 'blub'
-        $Script:PGVM_VERSION_PATH = 'TestDrive:VERSION.txt'
-        Set-Content $Script:PGVM_VERSION_PATH '1.1.1'
+        $Script:PSDK_VERSION_SERVICE = 'blub'
+        $Script:PSDK_VERSION_PATH = 'TestDrive:VERSION.txt'
+        Set-Content $Script:PSDK_VERSION_PATH '1.1.1'
 
         Mock Invoke-RestMethod { throw 'error' } -parameterFilter { $Uri -eq 'blub' }
 
-        $result = Is-New-Posh-GVM-Version-Available
+        $result = Is-New-Posh-SDK-Version-Available
 
         It 'returns $false' {
             $result | Should Be $false
@@ -194,30 +194,30 @@ Describe 'Is-New-Posh-GVM-Version-Available' {
     }
 }
 
-Describe 'Get-GVM-API-Version' {
+Describe 'Get-SDK-API-Version' {
     Context 'No cached version' {
-        $Script:GVM_API_VERSION_PATH = 'TestDrive:version.txt'
+        $Script:SDK_API_VERSION_PATH = 'TestDrive:version.txt'
 
         It 'returns `$null' {
-            Get-GVM-API-Version | Should Be $null
+            Get-SDK-API-Version | Should Be $null
         }
     }
 
     Context 'No cached version' {
-        $Script:GVM_API_VERSION_PATH = 'TestDrive:version.txt'
-        Set-Content $Script:GVM_API_VERSION_PATH '1.1.1'
+        $Script:SDK_API_VERSION_PATH = 'TestDrive:version.txt'
+        Set-Content $Script:SDK_API_VERSION_PATH '1.1.1'
 
         It 'returns $null' {
-            Get-GVM-API-Version | Should Be 1.1.1
+            Get-SDK-API-Version | Should Be 1.1.1
         }
     }
 }
 
 Describe 'Check-Available-Broadcast' {
     Context 'Last execution was online, still online' {
-        $Script:GVM_ONLINE = $true
-        $Script:GVM_AVAILABLE = $true
-        Mock Get-GVM-API-Version { '1.2.3' }
+        $Script:SDK_ONLINE = $true
+        $Script:SDK_AVAILABLE = $true
+        Mock Get-SDK-API-Version { '1.2.3' }
         Mock Invoke-Broadcast-API-Call { 'Broadcast message' }
         Mock Handle-Broadcast -verifiable -parameterFilter { $Command -eq $null -and $Broadcast -eq 'Broadcast message' }
         Mock Write-Offline-Broadcast
@@ -236,9 +236,9 @@ Describe 'Check-Available-Broadcast' {
     }
 
     Context 'Last execution was online, now offline' {
-        $Script:GVM_ONLINE = $true
-        $Script:GVM_AVAILABLE = $false
-        Mock Get-GVM-API-Version { '1.2.4' }
+        $Script:SDK_ONLINE = $true
+        $Script:SDK_AVAILABLE = $false
+        Mock Get-SDK-API-Version { '1.2.4' }
         Mock Invoke-Broadcast-API-Call { $null }
         Mock Handle-Broadcast
         Mock Write-Offline-Broadcast
@@ -257,9 +257,9 @@ Describe 'Check-Available-Broadcast' {
     }
 
     Context 'Last execution was offline, still offline' {
-        $Script:GVM_ONLINE = $false
-        $Script:GVM_AVAILABLE = $false
-        Mock Get-GVM-API-Version { '1.2.4' }
+        $Script:SDK_ONLINE = $false
+        $Script:SDK_AVAILABLE = $false
+        Mock Get-SDK-API-Version { '1.2.4' }
         Mock Invoke-Broadcast-API-Call { $null }
         Mock Handle-Broadcast
         Mock Write-Offline-Broadcast
@@ -278,9 +278,9 @@ Describe 'Check-Available-Broadcast' {
     }
 
     Context 'Last execution was offline, now online' {
-        $Script:GVM_ONLINE = $false
-        $Script:GVM_AVAILABLE = $true
-        Mock Get-GVM-API-Version { '1.2.5' }
+        $Script:SDK_ONLINE = $false
+        $Script:SDK_AVAILABLE = $true
+        Mock Get-SDK-API-Version { '1.2.5' }
         Mock Invoke-Broadcast-API-Call { 'Broadcast message' }
         Mock Handle-Broadcast -verifiable -parameterFilter { $Command -eq $null -and $Broadcast -eq 'Broadcast message' }
         Mock Write-Offline-Broadcast
@@ -303,8 +303,8 @@ Describe 'Invoke-Self-Update' {
     Context 'Selfupdate will be triggered, no force, no new version' {
         Mock Update-Candidates-Cache -verifiable
         Mock Write-Output -verifiable
-        Mock Is-New-Posh-GVM-Version-Available { $false }
-        Mock Invoke-Posh-Gvm-Update
+        Mock Is-New-Posh-SDK-Version-Available { $false }
+        Mock Invoke-Posh-Sdk-Update
 
         Invoke-Self-Update
 
@@ -313,15 +313,15 @@ Describe 'Invoke-Self-Update' {
         }
 
         It 'does not updates itself' {
-            Assert-MockCalled Invoke-Posh-Gvm-Update -Times 0
+            Assert-MockCalled Invoke-Posh-Sdk-Update -Times 0
         }
     }
 
     Context 'Selfupdate will be triggered, no force, new version' {
         Mock Update-Candidates-Cache -verifiable
         Mock Write-Output -verifiable
-        Mock Is-New-Posh-GVM-Version-Available { $true }
-        Mock Invoke-Posh-Gvm-Update -verifiable
+        Mock Is-New-Posh-SDK-Version-Available { $true }
+        Mock Invoke-Posh-Sdk-Update -verifiable
 
         Invoke-Self-Update
 
@@ -333,8 +333,8 @@ Describe 'Invoke-Self-Update' {
     Context 'Selfupdate will be triggered, force, no new version' {
         Mock Update-Candidates-Cache -verifiable
         Mock Write-Output -verifiable
-        Mock Is-New-Posh-GVM-Version-Available { $false }
-        Mock Invoke-Posh-Gvm-Update -verifiable
+        Mock Is-New-Posh-SDK-Version-Available { $false }
+        Mock Invoke-Posh-Sdk-Update -verifiable
 
         Invoke-Self-Update -Force $true
 
@@ -349,7 +349,7 @@ Describe 'Check-Candidate-Present checks if candidate parameter is valid' {
 		{ Check-Candidate-Present } | Should Throw
 	}
 
-    $Script:GVM_CANDIDATES = @('grails','groovy')
+    $Script:SDK_CANDIDATES = @('grails','groovy')
     It 'throws error if candidate unknown' {
         { Check-Candidate-Present java } | Should Throw
     }
@@ -385,7 +385,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is offline and the provided version is not locally available' {
+    Context 'When sdk is offline and the provided version is not locally available' {
         Mock-Check-Candidate-Grails
         Mock-Offline
         Mock-Grails-1.1.1-Locally-Available $false
@@ -399,7 +399,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is offline and no version is provided but there is a current version' {
+    Context 'When sdk is offline and no version is provided but there is a current version' {
         Mock-Check-Candidate-Grails
         Mock-Offline
         Mock-Current-Grails-1.2
@@ -415,7 +415,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is offline and no version is provided and no current version is defined' {
+    Context 'When sdk is offline and no version is provided and no current version is defined' {
         Mock-Check-Candidate-Grails
         Mock-Offline
         Mock-No-Current-Grails
@@ -429,7 +429,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is online and no version is provided' {
+    Context 'When sdk is online and no version is provided' {
         Mock-Check-Candidate-Grails
         Mock-Online
         Mock-Api-Call-Default-Grails-2.2
@@ -445,7 +445,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is online and the provided version is valid' {
+    Context 'When sdk is online and the provided version is valid' {
         Mock-Check-Candidate-Grails
         Mock-Online
         Mock-Api-Call-Grails-1.1.1-Available $true
@@ -461,7 +461,7 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
         }
     }
 
-    Context 'When gvm is online and the provided version is invalid' {
+    Context 'When sdk is online and the provided version is invalid' {
         Mock-Check-Candidate-Grails
         Mock-Online
         Mock-Api-Call-Grails-1.1.1-Available $false
@@ -478,32 +478,32 @@ Describe 'Check-Candidate-Version-Available select or vadidates a version for a 
 
 Describe 'Get-Current-Candidate-Version reads the currently linked version' {
     Context 'When current is not defined' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
         It 'returns $null if current not defined' {
             Get-Current-Candidate-Version grails | Should Be $null
         }
 
-        Reset-PGVM-DIR
+        Reset-PSDK-DIR
     }
 
     Context 'When current is defined' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\2.2.2" | Out-Null
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\current" "$Global:PGVM_DIR\grails\2.2.2"
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\2.2.2" | Out-Null
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\current" "$Global:PSDK_DIR\grails\2.2.2"
 
         It 'returns the liked version' {
             Get-Current-Candidate-Version grails | Should Be 2.2.2
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Get-Env-Candidate-Version reads the version set in $Candidate-Home' {
     Context 'When GRAILS_HOME is set to a specific version' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\2.2.1" | Out-Null
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\2.2.1" | Out-Null
         Mock-Grails-Home 2.2.1
 
         It 'returns the set version' {
@@ -511,13 +511,13 @@ Describe 'Get-Env-Candidate-Version reads the version set in $Candidate-Home' {
         }
 
         Reset-Grails-Home
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'When GRAILS_HOME is set to current' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\2.2.1" | Out-Null
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\current" "$Global:PGVM_DIR\grails\2.2.1"
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\2.2.1" | Out-Null
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\current" "$Global:PSDK_DIR\grails\2.2.1"
 
         Mock-Grails-Home current
 
@@ -526,7 +526,7 @@ Describe 'Get-Env-Candidate-Version reads the version set in $Candidate-Home' {
         }
 
         Reset-Grails-Home
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
@@ -555,71 +555,71 @@ Describe 'Is-Candidate-Version-Locally-Available check the path exists' {
     }
 
     Context 'COC path for grails 1.1.1 is missing' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
         it 'returns $false' {
             Is-Candidate-Version-Locally-Available grails 1.1.1 | Should Be $false
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'COC path for grails 1.1.1 exists' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.1.1" | Out-Null
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.1.1" | Out-Null
 
         it 'returns $true' {
             Is-Candidate-Version-Locally-Available grails 1.1.1 | Should Be $true
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Get-Installed-Candidate-Version-List' {
     Context 'Version 1.1, 1.3.7 and 2.2.1 of grails installed' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.1" | Out-Null
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\2.2.1" | Out-Null
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\current" "$Global:PGVM_DIR\grails\2.2.1"
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.1" | Out-Null
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\2.2.1" | Out-Null
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\current" "$Global:PSDK_DIR\grails\2.2.1"
 
         It 'returns list of installed versions' {
             Get-Installed-Candidate-Version-List grails | Should Be 1.1,1.3.7,2.2.1
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Set-Env-Candidate-Version' {
     Context 'Env-Version of grails is current' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\2.2.1" | Out-Null
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\current" "$Global:PGVM_DIR\grails\2.2.1"
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\2.2.1" | Out-Null
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\current" "$Global:PSDK_DIR\grails\2.2.1"
         Mock-Grails-Home current
         $backupPATH = $env:Path
 
         Set-Env-Candidate-Version grails 1.3.7
 
         It 'sets GRAILS_HOME' {
-            $env:GRAILS_HOME -eq "$Global:PGVM_DIR\grails\1.3.7"
+            $env:GRAILS_HOME -eq "$Global:PSDK_DIR\grails\1.3.7"
         }
 
         It 'extends the Path' {
-            $env:Path -eq "$Global:PGVM_DIR\grails\1.3.7\bin"
+            $env:Path -eq "$Global:PSDK_DIR\grails\1.3.7\bin"
         }
 
         $env:Path = $backupPATH
         Reset-Grails-Home
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Set-Linked-Candidate-Version' {
-    Context 'In a initialized PGVM-Dir' {
-        Mock-PGVM-Dir
+    Context 'In a initialized PSDK-Dir' {
+        Mock-PSDK-Dir
         Mock Set-Junction-Via-Mklink -verifiable -parameterFilter { $Candidate -eq 'grails' -and $Version -eq '2.2.1' }
 
         Set-Linked-Candidate-Version grails 2.2.1
@@ -628,99 +628,99 @@ Describe 'Set-Linked-Candidate-Version' {
             Assert-VerifiableMocks
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Set-Junction-Via-Mklink' {
     Context 'No junction for the link-path exists' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
 
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\bla" "$Global:PGVM_DIR\grails\1.3.7"
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\bla" "$Global:PSDK_DIR\grails\1.3.7"
 
         It 'creates a junction to the target location' {
-            (Get-Junction-Target "$Global:PGVM_DIR\grails\bla").FullName -eq "$Global:PGVM_DIR\grails\1.3.7" 
+            (Get-Junction-Target "$Global:PSDK_DIR\grails\bla").FullName -eq "$Global:PSDK_DIR\grails\1.3.7" 
         }
 
-        (Get-Item "$Global:PGVM_DIR\grails\bla").Delete()
-        Reset-PGVM-Dir
+        (Get-Item "$Global:PSDK_DIR\grails\bla").Delete()
+        Reset-PSDK-Dir
     }
 
     Context 'A Junction for the link-path exists' {
-        Mock-PGVM-Dir
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
-        New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.8" | Out-Null
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\bla" "$Global:PGVM_DIR\grails\1.3.8"
-        Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\bla" "$Global:PGVM_DIR\grails\1.3.7"
+        Mock-PSDK-Dir
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
+        New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.8" | Out-Null
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\bla" "$Global:PSDK_DIR\grails\1.3.8"
+        Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\bla" "$Global:PSDK_DIR\grails\1.3.7"
 
         It 'creates a junction to the target location without errors' {
-            (Get-Junction-Target "$Global:PGVM_DIR\grails\bla").FullName -eq "$Global:PGVM_DIR\grails\1.3.7"
+            (Get-Junction-Target "$Global:PSDK_DIR\grails\bla").FullName -eq "$Global:PSDK_DIR\grails\1.3.7"
         }
 
-        (Get-Item "$Global:PGVM_DIR\grails\bla").Delete()
-        Reset-PGVM-Dir
+        (Get-Item "$Global:PSDK_DIR\grails\bla").Delete()
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Get-Junction-Target' {
     Context 'Provided path is a junction' {
-      Mock-PGVM-Dir
-      New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
+      Mock-PSDK-Dir
+      New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
 
-      Set-Junction-Via-Mklink "$Global:PGVM_DIR\grails\bla" "$Global:PGVM_DIR\grails\1.3.7"
+      Set-Junction-Via-Mklink "$Global:PSDK_DIR\grails\bla" "$Global:PSDK_DIR\grails\1.3.7"
 
       It 'returns the item of the junction correctly' {
-          (Get-Junction-Target "$Global:PGVM_DIR\grails\bla").FullName -eq "$Global:PGVM_DIR\grails\1.3.7"
+          (Get-Junction-Target "$Global:PSDK_DIR\grails\bla").FullName -eq "$Global:PSDK_DIR\grails\1.3.7"
       }
 
-      (Get-Item "$Global:PGVM_DIR\grails\bla").Delete()
-      Reset-PGVM-Dir
+      (Get-Item "$Global:PSDK_DIR\grails\bla").Delete()
+      Reset-PSDK-Dir
     }
 
     Context 'Provided path is no junction' {
-      Mock-PGVM-Dir
-      New-Item -ItemType Directory "$Global:PGVM_DIR\grails\1.3.7" | Out-Null
+      Mock-PSDK-Dir
+      New-Item -ItemType Directory "$Global:PSDK_DIR\grails\1.3.7" | Out-Null
 
       It 'returns correctly a null object without exception' {
-          Get-Junction-Target "$Global:PGVM_DIR\grails\1.3.7" -eq $null
+          Get-Junction-Target "$Global:PSDK_DIR\grails\1.3.7" -eq $null
       }
 
-      Reset-PGVM-Dir
+      Reset-PSDK-Dir
     }
 }
 
-Describe 'Get-Online-Mode check the state variables for GVM-API availablitiy and for force offline mode' {
-    Context 'GVM-Api unavailable but may be connected' {
-        $Script:GVM_AVAILABLE = $false
-        $Script:GVM_FORCE_OFFLINE = $false
+Describe 'Get-Online-Mode check the state variables for SDK-API availablitiy and for force offline mode' {
+    Context 'SDK-Api unavailable but may be connected' {
+        $Script:SDK_AVAILABLE = $false
+        $Script:SDK_FORCE_OFFLINE = $false
 
         It 'returns $false' {
             Get-Online-Mode | Should Be $false
         }
     }
 
-    Context 'GVM-Api unavailable and may not be connected' {
-        $Script:GVM_AVAILABLE = $false
-        $Script:GVM_FORCE_OFFLINE = $true
+    Context 'SDK-Api unavailable and may not be connected' {
+        $Script:SDK_AVAILABLE = $false
+        $Script:SDK_FORCE_OFFLINE = $true
 
         It 'returns $false' {
             Get-Online-Mode | Should Be $false
         }
     }
 
-    Context 'GVM-Api is available and may not be connected' {
-        $Script:GVM_AVAILABLE = $true
-        $Script:GVM_FORCE_OFFLINE = $true
+    Context 'SDK-Api is available and may not be connected' {
+        $Script:SDK_AVAILABLE = $true
+        $Script:SDK_FORCE_OFFLINE = $true
 
         It 'returns $false' {
             Get-Online-Mode | Should Be $false
         }
     }
 
-    Context 'GVM-Api is available and may be connected' {
-        $Script:GVM_AVAILABLE = $true
-        $Script:GVM_FORCE_OFFLINE = $false
+    Context 'SDK-Api is available and may be connected' {
+        $Script:SDK_AVAILABLE = $true
+        $Script:SDK_FORCE_OFFLINE = $false
 
         It 'returns $true' {
             Get-Online-Mode | Should Be $true
@@ -747,9 +747,9 @@ Describe 'Check-Online-Mode throws an error when offline' {
     }
 }
 
-Describe 'Invoke-API-Call helps doing calls to the GVM-API' {
+Describe 'Invoke-API-Call helps doing calls to the SDK-API' {
     Context 'Successful API call only with API path' {
-        $Script:PGVM_SERVICE = 'blub'
+        $Script:PSDK_SERVICE = 'blub'
         Mock Invoke-RestMethod { 'called' } -parameterFilter { $Uri -eq 'blub/na/rock' }
 
         It 'returns the result from Invoke-RestMethod' {
@@ -758,15 +758,15 @@ Describe 'Invoke-API-Call helps doing calls to the GVM-API' {
     }
 
     Context 'Failed API call only with API path' {
-        $Script:PGVM_SERVICE = 'blub'
-        $Script:GVM_AVAILABLE = $true
+        $Script:PSDK_SERVICE = 'blub'
+        $Script:SDK_AVAILABLE = $true
         Mock Invoke-RestMethod { throw 'error' } -parameterFilter { $Uri -eq 'blub/na/rock' }
         Mock Check-Online-Mode -verifiable
 
         Invoke-API-Call 'na/rock'
 
-        It 'sets GVM_AVAILABLE to false' {
-            $Script:GVM_AVAILABLE | Should Be $false
+        It 'sets SDK_AVAILABLE to false' {
+            $Script:SDK_AVAILABLE | Should Be $false
         }
 
         It 'calls Check-Online-Mode which throws an error' {
@@ -775,15 +775,15 @@ Describe 'Invoke-API-Call helps doing calls to the GVM-API' {
     }
 
     Context 'Failed API call with API path and IgnoreFailure' {
-        $Script:PGVM_SERVICE = 'blub'
-        $Script:GVM_AVAILABLE = $true
+        $Script:PSDK_SERVICE = 'blub'
+        $Script:SDK_AVAILABLE = $true
         Mock Invoke-RestMethod { throw 'error' } -parameterFilter { $Uri -eq 'blub/na/rock' }
         Mock Check-Online-Mode
 
         Invoke-API-Call 'na/rock' -IgnoreFailure
 
-        It 'sets GVM_AVAILABLE to false' {
-            $Script:GVM_AVAILABLE | Should Be $false
+        It 'sets SDK_AVAILABLE to false' {
+            $Script:SDK_AVAILABLE | Should Be $false
         }
 
         It 'do not call Check-Online-Mode' {
@@ -792,7 +792,7 @@ Describe 'Invoke-API-Call helps doing calls to the GVM-API' {
     }
 
     Context 'Successful API call with API path and FilePath' {
-        $Script:PGVM_SERVICE = 'blub'
+        $Script:PSDK_SERVICE = 'blub'
         Mock Invoke-RestMethod -verifiable -parameterFilter { $Uri -eq 'blub/na/rock' -and $OutFile -eq 'TestDrive:a.txt' }
 
         Invoke-API-Call 'na/rock' TestDrive:a.txt
@@ -827,9 +827,9 @@ Describe 'Cleanup-Directory' {
 
 Describe 'Handle-Broadcast' {
     Context 'Cache broadcast message different than new broadcast' {
-        Mock-PGVM-Dir
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
-        Set-Content $Script:PGVM_BROADCAST_PATH 'Old Broadcast message'
+        Mock-PSDK-Dir
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
+        Set-Content $Script:PSDK_BROADCAST_PATH 'Old Broadcast message'
         Mock Write-Output -verifiable -parameterFilter { $InputObject -eq 'New Broadcast message' }
 
         Handle-Broadcast list 'New Broadcast message'
@@ -839,17 +839,17 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Get-Content $Script:PGVM_BROADCAST_PATH | Should Be 'New Broadcast message'
+            Get-Content $Script:PSDK_BROADCAST_PATH | Should Be 'New Broadcast message'
         }
 
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'No cached broadcast message' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
         Mock Write-Output -verifiable -parameterFilter { $InputObject -eq 'New Broadcast message' }
 
         Handle-Broadcast list 'New Broadcast message'
@@ -859,16 +859,16 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Get-Content $Script:PGVM_BROADCAST_PATH | Should Be 'New Broadcast message'
+            Get-Content $Script:PSDK_BROADCAST_PATH | Should Be 'New Broadcast message'
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'b do not print the new broadcast message' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
         Mock Write-Output -verifiable
 
         Handle-Broadcast b 'New Broadcast message'
@@ -878,16 +878,16 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Test-Path $Script:PGVM_BROADCAST_PATH | Should Be $false
+            Test-Path $Script:PSDK_BROADCAST_PATH | Should Be $false
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'Broadcast do nOt print the new broadcast message' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
         Mock Write-Output -verifiable
 
         Handle-Broadcast broadcast 'New Broadcast message'
@@ -897,16 +897,16 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Test-Path $Script:PGVM_BROADCAST_PATH | Should Be $false
+            Test-Path $Script:PSDK_BROADCAST_PATH | Should Be $false
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'selfupdate do not print the new broadcast message' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
         Mock Write-Output -verifiable
 
         Handle-Broadcast selfupdate 'New Broadcast message'
@@ -916,16 +916,16 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Test-Path $Script:PGVM_BROADCAST_PATH | Should Be $false
+            Test-Path $Script:PSDK_BROADCAST_PATH | Should Be $false
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'flush do not print the new broadcast message' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:PGVM_BROADCAST_PATH = "$Global:PGVM_DIR\broadcast.txt"
+        $Script:PSDK_BROADCAST_PATH = "$Global:PSDK_DIR\broadcast.txt"
         Mock Write-Output -verifiable
 
         Handle-Broadcast flush 'New Broadcast message'
@@ -935,51 +935,51 @@ Describe 'Handle-Broadcast' {
         }
 
         It 'sets the new broadcast message in file' {
-            Test-Path $Script:PGVM_BROADCAST_PATH | Should Be $false
+            Test-Path $Script:PSDK_BROADCAST_PATH | Should Be $false
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Init-Candidate-Cache' {
     Context 'Candidate cache file does not exists' {
-        Mock-PGVM-Dir
-        $Script:PGVM_CANDIDATES_PATH = "$Global:PGVM_DIR\candidates.txt"
+        Mock-PSDK-Dir
+        $Script:PSDK_CANDIDATES_PATH = "$Global:PSDK_DIR\candidates.txt"
 
         It 'throws an error' {
             { Init-Candidate-Cache } | Should Throw
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 
     Context 'Candidate cache file does exists' {
-        Mock-PGVM-Dir
-        $Script:PGVM_CANDIDATES_PATH = "$Global:PGVM_DIR\candidates.txt"
-        Set-Content $Script:PGVM_CANDIDATES_PATH 'grails,groovy,test'
-        $Script:GVM_CANDIDATES = $null
+        Mock-PSDK-Dir
+        $Script:PSDK_CANDIDATES_PATH = "$Global:PSDK_DIR\candidates.txt"
+        Set-Content $Script:PSDK_CANDIDATES_PATH 'grails,groovy,test'
+        $Script:SDK_CANDIDATES = $null
 
         Init-Candidate-Cache
 
-        It 'sets `$Script:GVM_CANDIDATES' {
-            $Script:GVM_CANDIDATEs | Should Be grails,groovy,test
+        It 'sets `$Script:SDK_CANDIDATES' {
+            $Script:SDK_CANDIDATEs | Should Be grails,groovy,test
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
 Describe 'Update-Candidate-Cache' {
     Context 'Checks online mode and than get version and candidates from api' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
-        $Script:GVM_API_VERSION_PATH = "$Global:PGVM_DIR\version.txt"
-        $Script:PGVM_CANDIDATES_PATH = "$Global:PGVM_DIR\candidates.txt"
+        $Script:SDK_API_VERSION_PATH = "$Global:PSDK_DIR\version.txt"
+        $Script:PSDK_CANDIDATES_PATH = "$Global:PSDK_DIR\candidates.txt"
 
         Mock Check-Online-Mode -verifiable
-        # Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'app/version' -and $FileTarget -eq "$Global:PGVM_DIR\version.txt" }
-        Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'candidates/all' -and $FileTarget -eq "$Global:PGVM_DIR\candidates.txt" }
+        # Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'app/version' -and $FileTarget -eq "$Global:PSDK_DIR\version.txt" }
+        Mock Invoke-API-Call -verifiable -parameterFilter { $Path -eq 'candidates/all' -and $FileTarget -eq "$Global:PSDK_DIR\candidates.txt" }
 
         Update-Candidates-Cache
 
@@ -987,7 +987,7 @@ Describe 'Update-Candidate-Cache' {
             Assert-VerifiableMocks
         }
 
-        Reset-PGVM-Dir
+        Reset-PSDK-Dir
     }
 }
 
@@ -1044,7 +1044,7 @@ Describe 'Install-Local-Version' {
     Context 'LocalPath is valid' {
         New-Item -ItemType Directory TestDrive:Snapshot | Out-Null
         Mock Write-Output
-        Mock Set-Junction-Via-Mklink -verifiable -parameterFilter { $Link -eq "$Global:PGVM_DIR\grails\snapshot" -and $Target -eq 'TestDrive:Snapshot' }
+        Mock Set-Junction-Via-Mklink -verifiable -parameterFilter { $Link -eq "$Global:PSDK_DIR\grails\snapshot" -and $Target -eq 'TestDrive:Snapshot' }
 
         Install-Local-Version grails snapshot TestDrive:Snapshot
 
@@ -1056,16 +1056,16 @@ Describe 'Install-Local-Version' {
 
 Describe 'Install-Remote-Version' {
     Context 'Install of a valid version without local archive' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
         Mock Write-Output
         Mock Check-Online-Mode -verifiable
-        $Script:PGVM_SERVICE = 'foobar'
-        $Script:PGVM_ARCHIVES_PATH = "$Global:PGVM_DIR\archives"
-        $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\temp"
+        $Script:PSDK_SERVICE = 'foobar'
+        $Script:PSDK_ARCHIVES_PATH = "$Global:PSDK_DIR\archives"
+        $Script:PSDK_TEMP_PATH = "$Global:PSDK_DIR\temp"
         $testFilePath = "$PSScriptRoot\test\grails-1.3.9.zip"
 
-        Mock Download-File -verifiable { Copy-Item $testFilePath "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" } -parameterFilter { $Url -eq 'foobar/broker/download/grails/1.3.9/MINGW64' -and $TargetFile -eq "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip" }
+        Mock Download-File -verifiable { Copy-Item $testFilePath "$Script:PSDK_ARCHIVES_PATH\grails-1.3.9.zip" } -parameterFilter { $Url -eq 'foobar/broker/download/grails/1.3.9/MINGW64' -and $TargetFile -eq "$Script:PSDK_ARCHIVES_PATH\grails-1.3.9.zip" }
 
         Install-Remote-Version grails 1.3.9
 
@@ -1074,22 +1074,22 @@ Describe 'Install-Remote-Version' {
         }
 
         It 'install it correctly' {
-            Test-Path "$Global:PGVM_DIR\grails\1.3.9\bin\grails" | Should be $true
+            Test-Path "$Global:PSDK_DIR\grails\1.3.9\bin\grails" | Should be $true
         }
 
-        Reset-PGVM-DIR
+        Reset-PSDK-DIR
     }
 
     Context 'Install of a valid version with local archive' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
         Mock Write-Output
         Mock Download-File
 
-        $Script:PGVM_ARCHIVES_PATH = "$Global:PGVM_DIR\archives"
-        $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\temp"
-        New-Item -ItemType Directory $Script:PGVM_ARCHIVES_PATH | Out-Null
-        Copy-Item "$PSScriptRoot\test\grails-1.3.9.zip" "$Script:PGVM_ARCHIVES_PATH\grails-1.3.9.zip"
+        $Script:PSDK_ARCHIVES_PATH = "$Global:PSDK_DIR\archives"
+        $Script:PSDK_TEMP_PATH = "$Global:PSDK_DIR\temp"
+        New-Item -ItemType Directory $Script:PSDK_ARCHIVES_PATH | Out-Null
+        Copy-Item "$PSScriptRoot\test\grails-1.3.9.zip" "$Script:PSDK_ARCHIVES_PATH\grails-1.3.9.zip"
 
         Install-Remote-Version grails 1.3.9
 
@@ -1098,22 +1098,22 @@ Describe 'Install-Remote-Version' {
         }
 
         It 'install it correctly' {
-            Test-Path "$Global:PGVM_DIR\grails\1.3.9\bin\grails" | Should be $true
+            Test-Path "$Global:PSDK_DIR\grails\1.3.9\bin\grails" | Should be $true
         }
 
-        Reset-PGVM-DIR
+        Reset-PSDK-DIR
     }
 
     Context 'Install of a currupt archive' {
-        Mock-PGVM-Dir
+        Mock-PSDK-Dir
 
         Mock Write-Output
         Mock Download-File
 
-        $Script:PGVM_ARCHIVES_PATH = "$Global:PGVM_DIR\archives"
-        $Script:PGVM_TEMP_PATH = "$Global:PGVM_DIR\tmp"
-        New-Item -ItemType Directory $Script:PGVM_ARCHIVES_PATH | Out-Null
-        Copy-Item "$PSScriptRoot\test\grails-2.2.2.zip" "$Script:PGVM_ARCHIVES_PATH\grails-2.2.2.zip"
+        $Script:PSDK_ARCHIVES_PATH = "$Global:PSDK_DIR\archives"
+        $Script:PSDK_TEMP_PATH = "$Global:PSDK_DIR\tmp"
+        New-Item -ItemType Directory $Script:PSDK_ARCHIVES_PATH | Out-Null
+        Copy-Item "$PSScriptRoot\test\grails-2.2.2.zip" "$Script:PSDK_ARCHIVES_PATH\grails-2.2.2.zip"
 
         It 'fails because of no unziped files' {
             Install-Remote-Version grails 2.2.2  | Should Throw
@@ -1123,6 +1123,6 @@ Describe 'Install-Remote-Version' {
             Assert-MockCalled Download-File 0
         }
 
-        Reset-PGVM-DIR
+        Reset-PSDK-DIR
     }
 }

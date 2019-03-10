@@ -1,3 +1,7 @@
+### Version 2.0.0
+* Project Renamed to posh-sdk
+* Updates to support sdkman v2 api from @chris-dalrymple
+
 ### Version 1.3.0
 * BUGFIX: update url to API endpoint
 * BUGFIX: support for symlink handling in Win10
