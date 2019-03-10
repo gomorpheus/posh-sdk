@@ -35,7 +35,7 @@ Requirements:
 3. Execute `gvm help` to get started!
 
 ### Via short script
-1. Execute `(new-object Net.WebClient).DownloadString('https://raw.githubusercontent.com/flofreud/posh-gvm/master/GetPoshGvm.ps1') | iex`
+1. Execute `(new-object Net.WebClient).DownloadString('https://raw.githubusercontent.com/gomorpheus/posh-gvm/master/GetPoshSdkMan.ps1') | iex`
 2. Execute `Import-Module posh-gvm`(best add it to your profile.ps1)
 3. Execute `gvm help` to get started!
 
