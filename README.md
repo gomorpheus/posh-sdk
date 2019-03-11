@@ -12,7 +12,7 @@ Posh-SDK consumes the REST-API of the offical SDKMan CLI and may therefore break
 Please report any bugs and feature request on the [GitHub Issue Tracker](https://github.com/gomorpheus/posh-sdk/issues).
 
 ## Differences to the BASH version
-- different directory used as default ~\.posh-sdk instead of ~\.sdk -> posh-sdk is not directly able to manage the .sdk-dir of GVM
+- different directory used as default ~\.posh-sdk instead of ~\.sdk -> posh-sdk is not directly able to manage the .sdk-dir of SDK
 - command extension are not supported
 - different way to configurate data-dir and auto-anwser
 - not all installable candidates are useful currently in Powershell (eg the groovyserv 0.13 package is not usable because there is no client app/script in the package)
