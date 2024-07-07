@@ -5,8 +5,6 @@ function Init-Posh-Sdk() {
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
 
-    Check-JAVA-HOME
-
     # Check if $Global:PSDK_DIR is available, if not create it
     if ( !( Test-Path "$Global:PSDK_DIR\.meta" ) ) {
         New-Item -ItemType Directory "$Global:PSDK_DIR\.meta" | Out-Null
